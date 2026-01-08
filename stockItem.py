@@ -1,37 +1,44 @@
-# base class
+# --------------------------------BASE CLASS--------------------------------
 class StockItem:
 
     # Class variable(which is shared by all objects in base and sub classes)
     stock_category="Car accessories"
     
-    # Dunder function
     def __init__(self,stock_code,quantity,price):
-
-        #stock code should not be empty if its empty it will raise value error
+        #empty list of errors which collects all errors
+        errors =[] 
         if not stock_code:
-            raise ValueError("Error!! stock code cannot be empty.")
-        #quantity should be in between 1 and 100 if its not in between 1 to 100 it will raise value error
+            errors.append("Error!! stock code cannot be empty.")
         if quantity<1 or quantity>100:
-            raise ValueError("Error!! Quantity must be between 1 to 100")
-        #price should be greater than 0 if its not greater than 0 it will raise value error
+            errors.append("Error!! Quantity must be between 1 to 100")
         if price<=0:
-            raise ValueError("Price must be greater than 0")
-        #Price should not be empty if its empty it will raise value error
-        if not price:
-            raise ValueError("Error!! price cannot be empty.")
+            errors.append("Price must be greater than 0")
+       
+
+        # if any errors exists,raise them together
+        # "\n".join(errors) combines all error messages line by line
+        if errors:
+            raise ValueError("\n".join(errors))
         
         self.__stock_code=stock_code
         self.__quantity=quantity
         self.__price=price
-    
+        
+
         # Setters 
     def setStockCode(self,stock_code):
+        if not stock_code:
+            raise ValueError("Error!! stock code cannot be empty.")
         self.__stock_code=stock_code
 
     def setQuantity(self,quantity):
+        if quantity<1 or quantity>100:
+            raise ValueError("Error!! Quantity must be between 1 to 100")
         self.__quantity=quantity
 
     def setPrice(self,price): #price without vat
+        if price<=0:
+            raise ValueError("Price must be greater than 0")
         self.__price=price
 
 
@@ -59,7 +66,6 @@ class StockItem:
         vat_amount=self.__price*self.getVAT()/100
         return self.__price+vat_amount
 
-    
 
     # Stock Methods
     # increase stock quantity after checking the amount and ensuring it doesnot exceed 100.
@@ -68,10 +74,13 @@ class StockItem:
         
         if amount<1:
             print("Error!! Increased stock should be greater than or equal to 1.")
+            return False
         elif new_quantity>100:
             print("Error!! Stock cannot be more than 100")
+            return False
         else:
             self.__quantity=new_quantity
+            return True
     
     
     # checks sale quantity and reduces stock if sufficient quantity is available
@@ -92,9 +101,9 @@ class StockItem:
                  +"\nStock Code : "+ str(self.getStockCode())
                  +"\nPrice without VAT: {:.2f} ".format(self.getPriceWithoutVAT())
                  +"\nPrice with VAT: {:.2f}".format(self.getPriceWithVAT())
-                 +"\nTotal unit in stock:"+str(self.getQuantity()))
-    
-# subclass
+                 +"\nTotal unit in stock:"+str(self.getQuantity()))   
+     
+# ------------------------------------SUB CLASS-----------------------------------------------
 class NavSys(StockItem):
     def __init__(self,stock_code,quantity,price,brand):
         if not brand:
@@ -105,6 +114,8 @@ class NavSys(StockItem):
     
     # setters
     def setBrand(self,brand):
+        if not brand:
+            raise ValueError("Error!! Brand cannot be empty.")
         self.__brand=brand
 
     # getters
@@ -122,90 +133,180 @@ class NavSys(StockItem):
     def __str__(self):
         return super().__str__()+"\nNavSys Brand:"+self.getBrand()
     
-    
-product=None 
+   
+#----------------------------lOGIN---------------------------------------------
+def login():
+    print("\n -------Login-------")  
+    username=input("Username: ")
+    password=input("Password: ")
 
-while True:
-    print("\n-----------------------------------------------------") 
-    print("      Welcome to Car Parts and Accessories shop      ")                
-    print("-----------------------------------------------------")  
-    print("                1.Add new items                      ") 
-    print("                2.Increase stock                     ")
-    print("                3.Sell stock                         ")
-    print("                4.Set New Stock Code                 ")
-    print("                5.Set New price                      ")
-    print("                6.Set Brand Name                     ")
-    print("                7.Stock item Details                 ")
-    print("                8.Exit                               ")
-    print("-----------------------------------------------------") 
-    
-    choice=int(input("\nPlease enter your choice: "))
+    if not username or not password:
+        print("username or password cannot be empty")
+        return False
+    try:
+        f= open("users.txt","r")
+        # reads each user record from file
+        for line in f:
+        # splits the recorded username and password and if it input match it successfully login
+            u,p=line.strip().split(",")
+            if username==u and password==p:
+                print("Login Successful")
+                return True
+       
+        print("Invalid username or password")
+        f.close()
+        return False
 
-    if choice==1:
+    except FileNotFoundError:
+        print("Error!! Users file not found.")
+        return False
+
+# -------------------------------ADD NEW USERS(WORKERS)-----------------------------
+def add_users():
+    print("\n -------ADD NEW USERS-------")  
+    username=input("Username: ")
+    password=input("Password: ")
+       
+    if not username or not password:
+            print("username or password should not be empty")
+            return False
+        
+    try:
+        f= open("users.txt","r")
+        for line in f:
+            # takes the first item(username) and compares it with the username that user enters.
+            # if matches,the user already exists in file
+            if line.split(",")[0]==username:
+                print("User already exists")
+                return True
+    except FileNotFoundError:
+        pass
+
+    f= open("users.txt","a")
+    f.write(f"{username},{password}\n")
+    f.close()
+
+    print("User added successfully")
+
+# --------------------------------Users Menu------------------------------------------
+def users_menu(): 
+    logged_in = False               
+    while not logged_in:
+        print("\n1. Login")
+        print("2. Add New User")
+
         try:
-            # taking user input 
-            stock_code=input("Enter a stock_code of your item: ")  
-            quantity=int(input("Enter a quantity of your item: ") ) 
-            price=float(input("Enter a price of your item: "))
-            brand=input("Enter a brand: ")
+            ch = int(input("Choose option: "))
 
-            product = NavSys(stock_code,quantity,price,brand)
-            print("Items added successfully \n")
-        except ValueError as e:
-            print(e)
-        
-
-    elif choice==2:
-        if product is None:
-            print("please add stock items.\n")
-        else:
-            increase_stock=int(input("Enter the quantity you want to increase: "))
-            product.increaseStock(increase_stock)
-            print("New stock is added successfully \n")
-
-    elif choice==3:
-        if product is None:
-            print("please add stock items.")
-        else:
-            sell_stock=int(input("Enter the quantity of sold items: "))
-            product.sellStock(sell_stock) 
-            print("Quantity of sold items are recorded. \n")
-
-    elif choice==4:
-        if product is None:
-            print("please add stock items.")
-        else:
-            new_stock_code=input("Enter the new stock code: ")
-            product.setStockCode( new_stock_code)
-            print("Stock code updated successfully. \n")
-
-    elif choice==5:
-        if product is None:
-            print("please add stock items.")
-        else:
-            new_price=float(input("Enter the new price: "))
-            product.setStockCode( new_price)
-            print("Price updated successfully. \n")
+            if ch == 1:
+                logged_in=login()
+            elif ch == 2:
+                add_users()
+            else:
+                print("Invalid choice!")
+        except ValueError:
+            print("Please enter a number 1 or 2")
+    return logged_in
     
-    elif choice==6:
-        if product is None:
-            print("please add stock items.")
-        else:
-            new_brand=float(input("Enter the new brand: "))
-            product.setBrand( new_brand)
-            print("Brand updated successfully. \n")
-        
-    elif choice==7:
-        if product is None:
-            print("Enter the stock first.\n")
-            print("No stock available \n")
-        else:
-            print(product)
 
-    elif choice==8:
-        print("Program exited \n")
-        break
 
-    else:
-        print("Invalid enter your choice first. \n")
+# ---------------------------------------------Main Menu---------------------------------------------
+def menu():
+    
+        logged_in=users_menu()
+        product=None 
+        while logged_in:
+            print("\n-----------------------------------------------------") 
+            print("      Welcome to Car Parts and Accessories shop      ")                
+            print("-----------------------------------------------------")  
+            print("                1.Add new items                      ") 
+            print("                2.Increase stock                     ")
+            print("                3.Sell stock                         ")
+            print("                4.Set New Stock Code                 ")
+            print("                5.Set New price                      ")
+            print("                6.Set Brand                          ")
+            print("                7.Stock item Details                 ")
+            print("                8.Logout                             ")
+            print("-----------------------------------------------------") 
+            try:    
+                choice=int(input("Please enter your choice: "))
 
+                if choice==1:
+                    try:
+                    # taking user input 
+                        stock_code=input("Enter a stock_code of your item: ")  
+                        quantity=int(input("Enter a quantity of your item: ") ) 
+                        price=float(input("Enter a price of your item: "))
+                        brand=input("Enter a brand:")
+                        product = NavSys(stock_code,quantity,price,brand)
+                        print("Items added successfully \n")
+                    except ValueError as e:
+                        print(e)
+                        
+
+                elif choice==2:
+                        if product is None:
+                            print("please add stock items.\n")
+                        else:
+                            increase_stock=int(input("Enter the quantity you want to increase: "))
+                            increaseStock=product.increaseStock(increase_stock)
+                            if increaseStock:
+                                print("New stock is added successfully \n")
+
+                elif choice==3:
+                        if product is None:
+                            print("please add stock items.")
+                        else:
+                            sell_stock=int(input("Enter the quantity of sold items: "))
+                            sellStock=product.sellStock(sell_stock)
+                            if sellStock: 
+                                print("Quantity of sold items are recorded. \n")
+                    
+                elif choice==4:
+                        if product is None:
+                            print("please add stock items.")
+                        else:
+                            new_stock_code=input("Enter the new stock code: ")
+                            product.setStockCode( new_stock_code)
+                            print("Stock code updated successfully. \n")
+                    
+
+                elif choice==5:
+                        if product is None:
+                            print("please add stock items.")
+                        else:
+                            new_price=float(input("Enter the new price: "))
+                            product.setPrice( new_price)
+                            print("Price updated successfully. \n")
+                
+                elif choice==6:
+                        if product is None:
+                            print("please add stock items.")
+                        else:
+                            brand=input("Enter the new brand: ")
+                            product.setBrand(brand)
+                            print("Price updated successfully. \n")
+                            
+                elif choice==7:
+                    
+                        if product is None:
+                            print("Enter the stock first.\n")
+                            print("No stock available \n")
+                        else:
+                            print(product)
+
+
+
+                elif choice==8:
+                    print("Logged out successfully \n")
+                    logged_in=False
+                    break
+                else:
+                    print("Invalid choose from the given option 1-7. \n")
+                    
+            except ValueError as e:
+                print (f"Error was {e}")
+            except Exception as e:
+                print (f"Error was {e}")
+
+menu()
